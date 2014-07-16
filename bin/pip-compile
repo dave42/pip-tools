@@ -51,6 +51,8 @@ def parse_args():
             help="Write comments to the output file, indicating how the compiled dependencies where calculated")
     parser.add_argument('--verbose', '-v', action='store_true', default=False,
             help='Show more output')
+    parser.add_argument('--allow-unverified', nargs='*', action='store', default=[],
+            help='Allow resolving this package from an unverified source (can be specified multiple times)')
     parser.add_argument('files', nargs='*')
     return parser.parse_args()
 
@@ -97,7 +99,7 @@ def collect_source_specs(filenames):
             yield spec
 
 
-def compile_specs(source_files, include_sources=False, dry_run=False):
+def compile_specs(source_files, include_sources=False, dry_run=False, allow_unverified=None):
     logger.debug('===> Collecting source requirements')
     top_level_specs = list(collect_source_specs(source_files))
 
@@ -110,7 +112,7 @@ def compile_specs(source_files, include_sources=False, dry_run=False):
     spec_set = spec_set.normalize()
     logger.debug('%s' % (spec_set,))
 
-    package_manager = PackageManager(extra_index_urls)
+    package_manager = PackageManager(extra_index_urls, allow_unverified=allow_unverified)
 
     logger.debug('')
     logger.debug('===> Resolving full tree')
@@ -170,7 +172,7 @@ def main():
         extra_index_urls.extend(urls)
 
     src_files = args.files or glob.glob(GLOB_PATTERN)
-    compile_specs(src_files, include_sources=args.include_sources, dry_run=args.dry_run)
+    compile_specs(src_files, include_sources=args.include_sources, dry_run=args.dry_run, allow_unverified=args.allow_unverified)
 
     if args.dry_run:
         logger.info("Dry-run, so nothing updated.")

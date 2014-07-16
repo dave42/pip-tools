@@ -213,7 +213,7 @@ class PackageManager(BasePackageManager):
     dep_cache_file = os.path.join(piptools_root, 'dependencies.pickle')
     download_cache_root = os.path.join(piptools_root, 'cache')
 
-    def __init__(self, extra_index_urls=[]):
+    def __init__(self, extra_index_urls=[], allow_unverified=None):
         # TODO: provide options for pip, such as index URL or use-mirrors
         if not os.path.exists(self.download_cache_root):
             os.makedirs(self.download_cache_root)
@@ -224,6 +224,7 @@ class PackageManager(BasePackageManager):
         self._index_urls = ['https://pypi.python.org/simple/']
         self._index_urls.extend(extra_index_urls)
         self._extra_index_urls = extra_index_urls
+        self._allow_unverified = allow_unverified or []
         try:
             # Try to pass/set retries with pip 1.6 (default: 0).
             self._session = PipSession(retries=3)
@@ -285,6 +286,7 @@ class PackageManager(BasePackageManager):
                     # this parameter down not supported anymore
                     # all insecure package should be enumerated
                     # allow_all_insecure=True,
+                    allow_unverified=self._allow_unverified
                 )
                 link = finder.find_requirement(requirement, False)
                 self._link_cache[specline] = link
